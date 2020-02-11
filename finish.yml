@@ -1,0 +1,6 @@
+---
+- hosts: ansible
+  become: yes
+  tasks:
+    - name: Remove directory setup
+      shell: rm -rf /var/www/html/support/setup/

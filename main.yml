@@ -1,0 +1,73 @@
+---
+- hosts: ansible
+  become: yes
+  vars_files:
+    - vars.yml
+  handlers:
+    - name: reload apache2
+      service: name=apache2 state=reloaded
+    - name: start apache2
+      service: name=apache2 state=started enabled=yes
+  tasks:
+    - import_tasks: common.yml
+    - import_tasks: mysql.yml
+    - name: Get latest osTicket version
+      shell: curl -s https://github.com/osTicket/osTicket/releases | grep -oP 'osTicket-v([0-9\.]+)zip' | head -1
+      register: osTicket_version
+    - name: Download {{ osTicket_version.stdout }}
+      shell: cd /Downloads && curl -LJO  https://github.com$(curl -s https://github.com/osTicket/osTicket/releases | grep -oP '/osTicket/osTicket/releases/download/v([0-9\.]+)/osTicket-v([0-9\.]+)zip' | head -1)
+    - name: Extract osTicket file
+      unarchive:
+        src: "/Downloads/{{ osTicket_version.stdout }}"
+        dest: "/Downloads/osTicket"
+        remote_src: yes
+    - name: Add Repository php7.3
+      apt_repository:
+        repo: ppa:ondrej/php
+    - name: Update Repository
+      apt:
+        update_cache: yes
+        upgrade: yes
+    - name: Install requirement osTicket
+      apt:
+        pkg:
+          - php7.3
+          - php7.3-common
+          - php7.3-mysql
+          - php7.3-xml
+          - php7.3-xmlrpc
+          - php7.3-curl
+          - php7.3-gd
+          - php7.3-imagick
+          - php7.3-cli
+          - php7.3-dev
+          - php7.3-imap
+          - php7.3-mbstring
+          - php7.3-opcache
+          - php7.3-soap
+          - php7.3-zip
+          - php7.3-intl
+          - php7.3-apcu
+          - apache2
+      notify:
+        - start apache2
+    - name: Create osTicket directory
+      file:
+        path: /var/www/html/support/
+        state: directory
+        owner: www-data
+        group: "{{ remote.user }}"
+        recurse: yes
+    - name: Move all file osTicket
+      shell: mv /Downloads/osTicket/upload/* /var/www/html/support/
+    - name: Copy sample config osTicket
+      copy:
+        src: /var/www/html/support/include/ost-sampleconfig.php
+        dest: /var/www/html/support/include/ost-config.php
+        remote_src: yes
+    - name: Change permission file config osTicket
+      file:
+        path: /var/www/html/support/include/ost-config.php
+        mode: '0644'
+      notify:
+        - reload apache2

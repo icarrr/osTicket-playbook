@@ -1,0 +1,46 @@
+# ---
+# - hosts: ansible
+#   become: yes
+#   vars_files:
+#     - vars.yml
+#   tasks:
+    - name: Check if letsencrypt is already installed.
+      stat: path=/usr/bin/certbot
+      register: letsencrypt_installed
+    - name: Check if SSL is already generate.
+      stat: path=/etc/letsencrypt/live/{{ app.domain }}
+      register: ssl_generated
+    - name: Add Repository certbot
+      apt_repository:
+        repo: ppa:certbot/certbot
+      when: not letsencrypt_installed.stat.exists
+    - name: Update Repository
+      apt:
+        update_cache: yes
+        upgrade: yes
+      when: 
+        - ansible_facts['os_family'] == "Debian"
+        - not letsencrypt_installed.stat.exists
+    - name: Update Repository
+      yum:
+        update_cache: yes
+      when: 
+        - ansible_facts['os_family'] == "RedHat"
+        - not letsencrypt_installed.stat.exists
+    - name: Install certbot
+      yum:
+        name: certbot-nginx
+        state: present
+      when: 
+        - ansible_facts['os_family'] == "RedHat"
+        - not letsencrypt_installed.stat.exists
+    - name: Install certbot
+      apt:
+        name: python-certbot-nginx
+        state: present
+      when: 
+        - ansible_facts['os_family'] == "Debian"
+        - not letsencrypt_installed.stat.exists
+    - name: Generate Certificate for change HTTP to HTTPS
+      shell: certbot --nginx --agree-tos -d {{ app.domain }} -m {{ lets_encrypt.email }} --redirect --non-interactive
+      when: not ssl_generated.stat.exists

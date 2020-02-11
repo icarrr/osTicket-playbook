@@ -1,0 +1,13 @@
+---
+remote:
+  user: ubuntu
+app:
+  domain: 'osticket.sibunglon.com'
+mysql:
+  root_password: 'V3ryStrongPasswd**'
+  db_name: 'orangganteng'
+  user_name: 'orangganteng-u'
+  user_password: 'orangganteng!'
+  host: '127.0.0.1'
+lets_encrypt:
+  email: 'admin@email.com'

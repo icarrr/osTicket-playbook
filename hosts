@@ -1,0 +1,13 @@
+########################## Example inventory ansible ##########################
+### connection using ssh based password                                      ##
+## [hostName]                                                                ##
+## 1.1.1.1 ansible_connection=ssh ansible_user=root ansible_ssh_pass=foo     ##
+##                                                                           ##
+##                                                                           ##
+### connection using ssh based key file                                      ##
+## [hostName]                                                                ##
+## 1.1.1.1 ansible_ssh_private_key_file=~/SSH-Key/Moon                       ##
+##                                                                           ##
+###############################################################################
+[ansible]
+serverAddress ansible_user=userServer ansible_ssh_private_key_file=private_key/ansible

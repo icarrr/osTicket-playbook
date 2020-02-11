@@ -1,0 +1,27 @@
+# ---
+# - hosts: tiramisu
+#   become: yes
+#   vars_files:
+#     - vars.yml
+#   tasks:
+    - name: Update Repository
+      apt:
+        update_cache: yes
+        upgrade: yes
+      when: ansible_facts['os_family'] == "Debian"
+    - name: Install package common
+      apt:
+        pkg: 
+          - unzip
+          - zip
+          - software-properties-common
+      when: ansible_facts['os_family'] == "Debian"
+    - name: Create downloads directory
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ remote.user }}"
+        group: "{{ remote.user }}"
+      with_items:
+        - /Downloads
+        - /Downloads/osTicket
